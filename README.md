@@ -2,17 +2,17 @@
 
 Complete AI-powered blog generation system with web search, Gemini AI integration, and ChatGPT-style interface.
 
-## 🎯 Features
+##  Features
 
-- ✅ **AI-Powered Blog Generation** using Google Gemini
-- ✅ **Web Search Integration** with DuckDuckGo
-- ✅ **ChatGPT-Style Interface** 
-- ✅ **Chat History** with PostgreSQL
-- ✅ **Multiple Chats** support
-- ✅ **Delete Chats** functionality
-- ✅ **Responsive Design**
+-  **AI-Powered Blog Generation** using Google Gemini
+-  **Web Search Integration** with DuckDuckGo
+-  **ChatGPT-Style Interface** 
+-  **Chat History** with PostgreSQL
+-  **Multiple Chats** support
+-  **Delete Chats** functionality
+-  **Responsive Design**
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 .
@@ -39,7 +39,7 @@ Complete AI-powered blog generation system with web search, Gemini AI integratio
 └── README.md                   # This file
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Prerequisites
 
@@ -108,7 +108,7 @@ python main.py
 
 Open: http://localhost:8000
 
-## 💻 Usage
+## Usage
 
 1. **Enter a topic** in the input box (e.g., "Artificial Intelligence in Healthcare")
 2. **Click Send** or press Enter
@@ -120,7 +120,7 @@ Open: http://localhost:8000
 5. **Create new chats** with the "+ New Chat" button
 6. **Delete chats** using the 🗑️ button
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 - **FastAPI** - Modern Python web framework
@@ -133,7 +133,7 @@ Open: http://localhost:8000
 - **HTML/CSS/JavaScript** - Simple, clean interface
 - **ChatGPT-style UI** - Familiar user experience
 
-## 📝 API Endpoints
+##  API Endpoints
 
 - `POST /api/generate-blog` - Generate blog from topic
 - `GET /api/chats` - Get all chats
@@ -141,7 +141,7 @@ Open: http://localhost:8000
 - `DELETE /api/chats/{chat_id}` - Delete chat
 - `GET /api/blogs` - Get all blogs
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### Database Connection Error
 ```bash
@@ -176,7 +176,7 @@ pip install -r requirements.txt --force-reinstall
 PORT=8001
 ```
 
-## 🎨 Customization
+##  Customization
 
 ### Change AI Model
 Edit `backend/services/ai_agent.py`:
@@ -193,7 +193,7 @@ async def multi_search(self, topic: str, num_searches: int = 5):  # Change numbe
 ### Modify UI Colors
 Edit `frontend/static/css/style.css`
 
-## 📦 Database Schema
+## Database Schema
 
 ### Users
 - id, username, email, created_at
@@ -215,7 +215,7 @@ If you encounter any issues:
 3. Ensure PostgreSQL is running
 4. Check Gemini API key is valid
 
-## 📄 License
+##  License
 
 MIT License - Free to use and modify!
 
