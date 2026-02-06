@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.routes.api import router as api_router
+from routes.api import router as api_router
+
 from backend.database.database import init_db
 import os
 

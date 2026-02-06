@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Blog Generator</title>
+    <title>AI Blog Generator - OpenAI Agents SDK</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
@@ -19,6 +19,18 @@
             <div class="chat-list" id="chatList">
                 <!-- Chats will be loaded here -->
             </div>
+
+            <!-- Agent System Info -->
+            <div class="agent-info-box">
+                <h3>🤖 Agent System</h3>
+                <div class="agent-badge">OpenAI Agents SDK</div>
+                <div class="agent-badge">Gemini Backend</div>
+                <div class="agent-list">
+                    <div class="agent-item">🔍 Research Agent</div>
+                    <div class="agent-item">✍️ Writer Agent</div>
+                    <div class="agent-item">📝 Editor Agent</div>
+                </div>
+            </div>
         </div>
 
         <!-- Main Chat Area -->
@@ -26,29 +38,56 @@
             <div class="chat-header">
                 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
                 <h1>🤖 AI Blog Generation Agent</h1>
+                <span class="badge">OpenAI SDK + Gemini</span>
             </div>
 
             <div class="chat-messages" id="chatMessages">
                 <div class="welcome-message">
                     <h2>Welcome to AI Blog Generator! 🎯</h2>
-                    <p>Enter any topic below and I'll:</p>
-                    <ul>
-                        <li>🔍 Search the web for latest information</li>
-                        <li>📊 Analyze and summarize key insights</li>
-                        <li>✍️ Generate a professional blog article</li>
-                    </ul>
-                    <p class="small-text">Powered by Gemini AI</p>
+                    <p><strong>Powered by OpenAI Agents SDK Architecture</strong></p>
+
+                    <div class="features-grid">
+                        <div class="feature">
+                            <div class="feature-icon">🔍</div>
+                            <h3>Research Agent</h3>
+                            <p>Analyzes web search results</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">✍️</div>
+                            <h3>Writer Agent</h3>
+                            <p>Generates professional blogs</p>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">📝</div>
+                            <h3>Editor Agent</h3>
+                            <p>Polishes content to perfection</p>
+                        </div>
+                    </div>
+
+                    <p class="small-text">Multi-agent collaboration powered by Gemini API</p>
+
+                    <div class="pipeline-toggle">
+                        <label>
+                            <input type="checkbox" id="pipelineMode">
+                            Enable Pipeline Mode (slower but higher quality)
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <div class="input-area">
                 <div class="input-container">
-                    <textarea id="topicInput" placeholder="Enter a topic for blog generation..." rows="1"></textarea>
+                    <textarea id="topicInput"
+                        placeholder="Enter a topic for blog generation... (e.g., 'The Future of AI')"
+                        rows="1"></textarea>
                     <button class="send-btn" onclick="generateBlog()" id="sendBtn">
                         <span>Send</span>
                     </button>
                 </div>
-                <p class="disclaimer">AI can make mistakes. Please verify important information.</p>
+                <p class="disclaimer">
+                    <span class="agent-badge-small">3-Agent System</span>
+                    Research → Write → Edit | AI can make mistakes. Verify important info.
+                </p>
             </div>
         </div>
     </div>
