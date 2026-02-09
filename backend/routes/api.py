@@ -38,6 +38,7 @@ class MessageResponse(BaseModel):
     id: int
     role: str
     content: str
+    image_url: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -113,7 +114,10 @@ async def generate_blog(request: TopicRequest, db: Session = Depends(get_db)):
 
         # Step 7: Save assistant message
         assistant_message = Message(
-            chat_id=chat.id, role="assistant", content=blog_content
+            chat_id=chat.id, 
+            role="assistant", 
+            content=blog_content,
+            image_url=ai_result.get("image_url")
         )
         db.add(assistant_message)
 
@@ -127,8 +131,11 @@ async def generate_blog(request: TopicRequest, db: Session = Depends(get_db)):
             "success": True,
             "chat_id": chat.id,
             "blog_id": blog.id,
+            "user_message_id": user_message.id,
+            "assistant_message_id": assistant_message.id,
             "topic": request.topic,
-            "content": blog_content
+            "content": blog_content,
+            "image_url": ai_result.get("image_url")
         }
 
     except Exception as e:
@@ -177,6 +184,28 @@ async def delete_chat(chat_id: int, db: Session = Depends(get_db)):
     db.delete(chat)
     db.commit()
     return {"success": True, "message": "Chat deleted successfully"}
+
+
+@router.delete("/messages/{message_id}")
+async def delete_message(message_id: int, db: Session = Depends(get_db)):
+    """Delete a single message"""
+    msg = db.query(Message).filter(Message.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    db.delete(msg)
+    db.commit()
+    return {"success": True}
+
+
+@router.patch("/messages/{message_id}")
+async def edit_message(message_id: int, content: str, db: Session = Depends(get_db)):
+    """Edit a single message"""
+    msg = db.query(Message).filter(Message.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    msg.content = content
+    db.commit()
+    return {"success": True}
 
 
 @router.get("/blogs", response_model=List[BlogResponse])

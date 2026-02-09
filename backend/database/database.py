@@ -42,8 +42,19 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
-    """Initialize database tables"""
+    """Initialize database tables and handle migrations"""
     Base.metadata.create_all(bind=engine)
+    
+    # Force add image_url column if it's missing (Postgres specific)
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT"))
+            conn.commit()
+            # If sources column still exists, we can try to migrate data if needed in future
+    except Exception as e:
+        print(f"Schema update note: {e}")
+
     print(f"Database tables initialized on {DATABASE_URL}")
 
 def get_db():

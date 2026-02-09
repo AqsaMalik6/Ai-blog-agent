@@ -6,30 +6,22 @@ from openai import AsyncOpenAI
 from openai.resources.chat import AsyncChat, AsyncCompletions
 from typing import Any, Mapping, List, Dict
 from backend.services.search_service import WebSearchService
+from backend.services.image_service import ImageService
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Configure environment for Gemini's OpenAI Compatibility
-# Using v1beta consistently
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
-os.environ["OPENAI_API_KEY"] = GEMINI_API_KEY
+os.environ["OPENAI_API_KEY"] = GEMINI_API_KEY or ""
 os.environ["OPENAI_BASE_URL"] = GEMINI_BASE_URL
 
 # Disable tracing as it requires a real OpenAI key
 set_tracing_disabled(True)
 
-async def search_tool(topic: str) -> str:
-    """
-    Perform deep web research on a blog topic. 
-    Use this when you need facts, trends, or specific data for a blog.
-    """
-    search_service = WebSearchService()
-    results = await search_service.multi_search(topic)
-    if not results:
-        return "No search results found."
-    return "\n\n".join([f"Source: {r['title']}\n{r['snippet']}" for r in results])
+# Global variables for the current request
+current_image_url = None
 
 class GeminiSanitizedCompletions(AsyncCompletions):
     """
@@ -61,18 +53,24 @@ class GeminiSanitizedClient(AsyncOpenAI):
 
 class GeminiAgent:
     """
-    Refactored Blog Agent using REAL OpenAI Agents SDK with Gemini Compatibility.
+    Refactored Agent using REAL OpenAI Agents SDK with Gemini Compatibility.
+    Now supports both Blog Generation and Image Generation.
     """
     def __init__(self):
         current_time = datetime.now().strftime("%A, %B %d, %Y")
         
+        # Ensure fresh API Key from environment
+        load_dotenv(override=True)
+        api_key = os.getenv("GEMINI_API_KEY")
+        
         # 1. Initialize Custom Client
         self.client = GeminiSanitizedClient(
-            api_key=os.getenv("GEMINI_API_KEY"),
+            api_key=api_key,
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         )
 
         # 2. Define the Model using SDK's Class but with our Client
+        print(f"Initializing GeminiAgent with model: gemini-2.5-flash")
         self.model = OpenAIChatCompletionsModel(
             model="gemini-2.5-flash",
             openai_client=self.client
@@ -80,50 +78,74 @@ class GeminiAgent:
         
         # 3. Define the Agent (Real SDK Class)
         self.blog_agent = Agent(
-            name="AI-Blog-Agent",
-            instructions=f"""You are a professional and polite AI Blog Agent.
+            name="AI-Agent",
+            instructions=f"""You are a professional AI Assistant specializing in Blogs and Image Generation.
 Today's Date: {current_time}.
 
 Workflow:
-1. Determine if the user query is a valid blog topic.
-2. If it IS a blog topic:
-   - If the topic is very broad (e.g., "AI", "AI Ethics"), DO NOT ask for clarification. Instead, write a comprehensive general overview covering the most important aspects.
-   - Use the 'search_tool' to gather deep research and facts.
-   - Summarize the research insights.
-   - Write a comprehensive, engaging, and well-structured professional blog article (800-1200 words).
-   - Use headings, subheadings, and a clean professional tone.
+1. Determine if the user wants an image or a blog post.
+2. If requesting an IMAGE:
+   - Use 'image_tool' with a detailed prompt.
+   - Reply with a brief confirmation (e.g., "Generated your image of [description]").
+3. If requesting a BLOG:
+   - Use 'search_tool' for research.
+   - Write a high-quality blog post.
+   - ALWAYS call 'image_tool' at the end to generate one featured image.
    - Return ONLY the blog content.
-3. If it is NOT a blog topic (greetings, identity, math, coding, casual talk, byes):
-   - Respond in the SAME LANGUAGE/STYLE as the user (e.g., Roman Urdu).
-   - Be extremely polite and intelligent (like GPT).
-   - Handle 'Allah Hafiz', 'Bye', etc., with warm responses.
-   - ONLY provide date if asked for "date" or "today date".
-   - ONLY provide temperature if asked for "temperature".
-   - Politely explain that you are a Blog Agent and ask for a blog topic if they need one.
-
-Note: Your goal is to write a FULL professional blog, not to offer options or ask for specification unless the topic is completely nonsensical.""",
-            tools=[function_tool(search_tool)],
+4. For general talk, be polite and helpful in the user's language.
+""",
+            tools=[function_tool(self.search_tool), function_tool(self.image_tool)],
             model=self.model
         )
 
-    async def process_topic(self, topic: str, search_results: List[Dict] = None) -> Dict[str, str]:
+    async def search_tool(self, topic: str) -> str:
+        """
+        Perform deep web research on a blog topic. 
+        """
+        search_service = WebSearchService()
+        results = await search_service.multi_search(topic)
+        if not results:
+            return "No search results found."
+        return "\n\n".join([f"Source: {r['title']}\n{r['snippet']}" for r in results])
+
+    async def image_tool(self, prompt: str) -> str:
+        """
+        Generate a high-quality AI image.
+        """
+        global current_image_url
+        img_service = ImageService()
+        url = await img_service.generate_image(prompt)
+        current_image_url = url
+        return f"[Image Generated: {prompt}]"
+
+    async def process_topic(self, topic: str) -> Dict[str, Any]:
+        global current_image_url
+        current_image_url = None # Clear for new request
         try:
             # 4. Use the REAL Runner (Guaranteed SDK usage)
             result = await Runner.run(self.blog_agent, topic)
             
             raw_content = result.final_output
 
-            # 5. Polish with Gemini (As requested by user)
+            # 5. Polish with Gemini
             polished_content = await self.polish_with_gemini(raw_content)
 
-            # The result is a standard RunResult from the SDK
             return {
                 "blog_content": polished_content,
-                "research_summary": "Extracted via Real Agent SDK Loop"
+                "image_url": current_image_url
             }
         except Exception as e:
             print(f"Agent Execution Error: {str(e)}")
-            return {"blog_content": f"System Error: {str(e)}", "research_summary": ""}
+            return {
+                "blog_content": f"System Error: {str(e)}", 
+                "image_url": None
+            }
+        except Exception as e:
+            print(f"Agent Execution Error: {str(e)}")
+            return {
+                "blog_content": f"System Error: {str(e)}", 
+                "image_url": None
+            }
 
     async def polish_with_gemini(self, content: str) -> str:
         """
@@ -145,7 +167,7 @@ Note: Your goal is to write a FULL professional blog, not to offer options or as
             
             # Use the same client for polishing
             response = await self.client.chat.completions.create(
-                model="gemini-2.5-flash", # Using the new fast 2.5 flash model
+                model="gemini-2.5-flash", 
                 messages=[{"role": "user", "content": polish_prompt}]
             )
             return response.choices[0].message.content.strip()
